@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [master, pre-release, "release/**"]
+  pull_request:
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: dtp_test
+          POSTGRES_USER: dtp
+          POSTGRES_PASSWORD: dtp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dtp -d dtp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://dtp:dtp@localhost:5432/dtp_test?schema=public
+      JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+      WEB_ORIGIN: http://localhost:5173
+      RUN_DB_TESTS: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run db:migrate
+      - run: npm run test
+      - run: npm run typecheck
+      - run: npm run build

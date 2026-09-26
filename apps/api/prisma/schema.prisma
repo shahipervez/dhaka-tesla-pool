@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         String
+  createdAt    DateTime      @default(now())
+  vehicle      Vehicle?
+  rideRequests RideRequest[]
+  rideEvents   RideEvent[]   @relation("RideEventActor")
+}
+
+model Vehicle {
+  id        String     @id @default(uuid())
+  driverId  String     @unique
+  name      String
+  plate     String     @unique
+  capacity  Int
+  isOnline  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  driver    User       @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  pools     RidePool[]
+}
+
+model RidePool {
+  id            String        @id @default(uuid())
+  vehicleId     String
+  pickupArea    String
+  corridor      String
+  status        String        @default("OPEN")
+  occupiedSeats Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  vehicle       Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  rides         RideRequest[]
+  events        RideEvent[]
+
+  @@index([status, pickupArea, corridor])
+  @@index([vehicleId, status])
+}
+
+model RideRequest {
+  id                String        @id @default(uuid())
+  passengerId       String
+  poolId            String?
+  pickupArea        String
+  destinationArea   String
+  seats             Int
+  distanceM         Int
+  soloFarePoysha    Int
+  farePoysha        Int
+  pooled            Boolean       @default(false)
+  paymentMethod     String        @default("CASH")
+  status            String        @default("REQUESTED")
+  cancellationReason String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  passenger         User          @relation(fields: [passengerId], references: [id], onDelete: Restrict)
+  pool              RidePool?     @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  events            RideEvent[]
+
+  @@index([passengerId, createdAt])
+  @@index([status, pickupArea, destinationArea])
+  @@index([poolId])
+}
+
+model RideEvent {
+  id            String       @id @default(uuid())
+  rideRequestId String?
+  poolId        String?
+  actorId       String?
+  fromStatus    String?
+  toStatus      String
+  note          String?
+  createdAt     DateTime     @default(now())
+  rideRequest   RideRequest? @relation(fields: [rideRequestId], references: [id], onDelete: Cascade)
+  pool          RidePool?    @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  actor         User?        @relation("RideEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([rideRequestId, createdAt])
+  @@index([poolId, createdAt])
+}

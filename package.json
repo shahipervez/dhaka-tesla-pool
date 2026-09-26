@@ -1,0 +1,24 @@
+{
+  "name": "dhaka-tesla-pool",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace @dtp/api",
+    "dev:web": "npm run dev --workspace @dtp/web",
+    "build": "npm run build --workspace @dtp/api && npm run build --workspace @dtp/web",
+    "test": "npm run test --workspace @dtp/api",
+    "typecheck": "npm run typecheck --workspace @dtp/api && npm run typecheck --workspace @dtp/web",
+    "db:migrate": "npm run prisma:migrate:deploy --workspace @dtp/api",
+    "db:seed": "npm run prisma:seed --workspace @dtp/api"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}
