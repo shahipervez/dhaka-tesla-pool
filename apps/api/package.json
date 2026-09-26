@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "build": "prisma generate",
+    "start": "tsx src/server.ts",
     "test": "prisma generate && vitest run",
     "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
     "prisma:migrate:deploy": "prisma migrate deploy",
